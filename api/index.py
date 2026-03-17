@@ -64,221 +64,397 @@ async def index():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sound Match EQ Generator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>SoundMatch EQ | Audio Character Transfer</title>
+    <meta name="description" content="Match the frequency response of your audio files with AI-powered EQ generation.">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0c0c0e;
-            --card-color: #1a1a1e;
-            --accent-color: #0071e3;
-            --text-color: #f5f5f7;
-            --text-secondary: #86868b;
+            --bg: #09090b;
+            --surface: #18181b;
+            --surface-hover: #27272a;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --accent: #8b5cf6;
+            --text: #fafafa;
+            --text-muted: #a1a1aa;
+            --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(24, 24, 27, 0.7);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+            color: var(--text);
             margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            line-height: 1.5;
             min-height: 100vh;
-            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .container {
-            width: 90%;
-            max-width: 800px;
-            background: var(--card-color);
-            padding: 40px;
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.05);
-            backdrop-filter: blur(20px);
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            padding: 2rem 1rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
         }
 
         h1 {
-            font-size: 2.5rem;
-            font-weight: 600;
-            margin-bottom: 30px;
-            text-align: center;
-            background: linear-gradient(135deg, #fff, #888);
+            font-size: clamp(2.5rem, 8vw, 3.5rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 0;
+            background: linear-gradient(135deg, #fff 30%, #a1a1aa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .upload-section {
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+
+        .main-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 2rem;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .upload-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .upload-card {
-            background: rgba(255,255,255,0.03);
-            border: 2px dashed rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s ease;
+        @media (max-width: 640px) {
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+            .main-card {
+                padding: 1.5rem;
+            }
+        }
+
+        .drop-zone {
             position: relative;
-        }
-
-        .upload-card:hover {
-            border-color: var(--accent-color);
-            background: rgba(0,113,227,0.05);
-        }
-
-        label {
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px dashed var(--border);
+            border-radius: 1.25rem;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
+            overflow: hidden;
+        }
+
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .drop-zone.active {
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .drop-zone input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .icon-circle {
+            width: 48px;
+            height: 48px;
+            background: var(--surface);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease;
+        }
+
+        .drop-zone:hover .icon-circle {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .file-label {
             display: block;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
         }
 
-        input[type="file"] {
-            display: none;
+        .file-name {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
 
-        .file-status {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .btn-generate {
-            display: block;
+        .btn-primary {
             width: 100%;
-            padding: 15px;
-            background: var(--accent-color);
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 1rem;
+            padding: 1.25rem;
             font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: transform 0.2s;
-            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px var(--primary-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
-        .btn-generate:hover {
-            transform: scale(1.02);
+        .btn-primary:hover {
             filter: brightness(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px var(--primary-glow);
         }
 
-        .btn-generate:active {
-            transform: scale(0.98);
+        .btn-primary:active {
+            transform: translateY(0);
         }
 
-        #result {
-            margin-top: 30px;
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #result-area {
+            margin-top: 3rem;
             display: none;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .result-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
-            margin-top: 20px;
-            max-height: 300px;
-            overflow-y: auto;
-            padding-right: 10px;
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .eq-item {
-            background: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 0.9rem;
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
         }
 
-        .eq-freq { color: var(--text-secondary); }
-        .eq-val { font-weight: 600; color: var(--accent-color); }
-
-        #graph-container {
-            margin-top: 30px;
-            text-align: center;
+        .graph-wrapper {
+            background: rgba(0,0,0,0.3);
+            border-radius: 1.5rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
         }
 
         #graph-img {
-            max-width: 100%;
-            border-radius: 12px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            width: 100%;
+            height: auto;
+            border-radius: 1rem;
+            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.2));
         }
 
-        .loading {
+        .eq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .eq-chip {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
             text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .eq-chip:hover {
+            border-color: var(--primary);
+            background: var(--surface-hover);
+        }
+
+        .eq-f {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .eq-v {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .loader {
             display: none;
-            color: var(--text-secondary);
-            margin-top: 20px;
+            margin: 2rem auto;
+            text-align: center;
         }
 
-        .loading::after {
-            content: "";
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--accent-color);
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--primary);
             border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s linear infinite;
-            vertical-align: middle;
-            margin-left: 10px;
+            animation: rotate 1s linear infinite;
+            margin: 0 auto 1rem;
         }
 
-        @keyframes spin {
+        @keyframes rotate {
             to { transform: rotate(360deg); }
         }
+
+        footer {
+            margin-top: auto;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        /* Accessibility: focus states */
+        .drop-zone:focus-within {
+            outline: 2px solid var(--primary);
+            outline-offset: 4px;
+        }
+
+        /* Animations for values */
+        .eq-v.positive { color: #10b981; }
+        .eq-v.negative { color: #ef4444; }
+
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Sound Match EQ</h1>
-        
-        <div class="upload-section">
-            <div class="upload-card">
-                <label for="clean_file">
-                    <strong>Original Audio</strong>
-                    <div class="file-status" id="clean-status">Not selected</div>
-                </label>
-                <input type="file" id="clean_file" accept=".wav,.mp3,.flac,.m4a">
-            </div>
-            <div class="upload-card">
-                <label for="recorded_file">
-                    <strong>Recorded Audio</strong>
-                    <div class="file-status" id="recorded-status">Not selected</div>
-                </label>
-                <input type="file" id="recorded_file" accept=".wav,.mp3,.flac,.m4a">
-            </div>
-        </div>
+    <div class="app-container">
+        <header>
+            <h1>SoundMatch EQ</h1>
+            <p class="subtitle">Transfer frequency characteristics between tracks</p>
+        </header>
 
-        <button class="btn-generate" onclick="generateEQ()">Generate EQ</button>
+        <main class="main-card">
+            <div class="upload-grid">
+                <!-- Reference File -->
+                <div class="drop-zone" id="zone-clean" role="button" aria-label="Upload original audio">
+                    <div class="icon-circle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+                    </div>
+                    <span class="file-label">Original Audio</span>
+                    <span class="file-name" id="name-clean">Target frequency response</span>
+                    <input type="file" id="clean_file" accept="audio/*">
+                </div>
 
-        <div class="loading" id="loader">Processing audio...</div>
-
-        <div id="result">
-            <div id="graph-container">
-                <img id="graph-img" src="" alt="EQ Graph">
+                <!-- Recorded File -->
+                <div class="drop-zone" id="zone-recorded" role="button" aria-label="Upload recorded audio">
+                    <div class="icon-circle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+                    </div>
+                    <span class="file-label">Recorded Audio</span>
+                    <span class="file-name" id="name-recorded">Audio to be corrected</span>
+                    <input type="file" id="recorded_file" accept="audio/*">
+                </div>
             </div>
-            <h3>EQ Settings</h3>
-            <div class="result-grid" id="eq-result-grid"></div>
-        </div>
+
+            <button class="btn-primary" id="btn-generate" onclick="generateEQ()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 8-7 9 9 0 0 1 8 7"/><path d="M4 13a9 9 0 0 0 8 7 9 9 0 0 0 8-7"/><polyline points="12 4 12 12 16 16"/></svg>
+                Generate Correction Curve
+            </button>
+
+            <div class="loader" id="loader">
+                <div class="spinner"></div>
+                <p>Analyzing sonic fingerprints...</p>
+            </div>
+        </main>
+
+        <section id="result-area">
+            <div class="result-header">
+                <h2 style="margin:0; font-size:1.5rem">Correction Curve</h2>
+                <div id="status-badge" style="background:var(--primary); padding:4px 12px; border-radius:99px; font-size:0.75rem; font-weight:700">READY</div>
+            </div>
+
+            <div class="graph-wrapper">
+                <img id="graph-img" src="" alt="EQ Frequency Response Graph">
+            </div>
+
+            <h3 style="margin-top:2rem; font-size:1.1rem; color:var(--text-muted)">Equalizer Settings (31-Band)</h3>
+            <div class="eq-grid" id="eq-grid"></div>
+        </section>
     </div>
 
+    <footer>
+        <p>&copy; 2026 SoundMatch EQ. Professional Audio Analysis Tool.</p>
+    </footer>
+
     <script>
-        document.getElementById('clean_file').onchange = e => {
-            document.getElementById('clean-status').innerText = e.target.files[0].name;
-        };
-        document.getElementById('recorded_file').onchange = e => {
-            document.getElementById('recorded-status').innerText = e.target.files[0].name;
-        };
+        const cleanInput = document.getElementById('clean_file');
+        const recordedInput = document.getElementById('recorded_file');
+
+        // UI Updates for file selection
+        cleanInput.addEventListener('change', e => {
+            if(e.target.files[0]) {
+                document.getElementById('name-clean').textContent = e.target.files[0].name;
+                document.getElementById('zone-clean').classList.add('active');
+            }
+        });
+
+        recordedInput.addEventListener('change', e => {
+            if(e.target.files[0]) {
+                document.getElementById('name-recorded').textContent = e.target.files[0].name;
+                document.getElementById('zone-recorded').classList.add('active');
+            }
+        });
+
+        // Drag and drop visual feedback
+        ['zone-clean', 'zone-recorded'].forEach(id => {
+            const zone = document.getElementById(id);
+            zone.addEventListener('dragover', () => zone.classList.add('drag-over'));
+            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+            zone.addEventListener('drop', () => zone.classList.remove('drag-over'));
+        });
 
         async function generateEQ() {
-            const cleanFile = document.getElementById('clean_file').files[0];
-            const recordedFile = document.getElementById('recorded_file').files[0];
+            const cleanFile = cleanInput.files[0];
+            const recordedFile = recordedInput.files[0];
 
             if (!cleanFile || !recordedFile) {
-                alert("Please select both files.");
+                alert("Please select both files to continue.");
                 return;
             }
 
@@ -286,8 +462,13 @@ async def index():
             formData.append('clean', cleanFile);
             formData.append('recorded', recordedFile);
 
-            document.getElementById('loader').style.display = 'block';
-            document.getElementById('result').style.display = 'none';
+            const loader = document.getElementById('loader');
+            const resultArea = document.getElementById('result-area');
+            const btn = document.getElementById('btn-generate');
+
+            loader.style.display = 'block';
+            resultArea.style.display = 'none';
+            btn.disabled = true;
 
             try {
                 const response = await fetch('/calculate', {
@@ -295,28 +476,36 @@ async def index():
                     body: formData
                 });
 
-                if (!response.ok) throw new Error("Processing failed");
+                if (!response.ok) throw new Error("Sonic analysis failed. Please try different files.");
 
                 const data = await response.json();
                 
-                // Display results
-                const grid = document.getElementById('eq-result-grid');
+                // Populate EQ Grid
+                const grid = document.getElementById('eq-grid');
                 grid.innerHTML = '';
                 data.eq_values.forEach((v, i) => {
                     const freq = data.freqs[i];
+                    const valClass = v > 0 ? 'positive' : (v < 0 ? 'negative' : '');
                     const div = document.createElement('div');
-                    div.className = 'eq-item';
-                    div.innerHTML = `<div class="eq-freq">${freq}Hz</div><div class="eq-val">${v > 0 ? '+' : ''}${v}</div>`;
+                    div.className = 'eq-chip';
+                    div.innerHTML = `
+                        <span class="eq-f">${freq >= 1000 ? (freq/1000).toFixed(1)+'k' : freq}Hz</span>
+                        <span class="eq-v ${valClass}">${v > 0 ? '+' : ''}${v}</span>
+                    `;
                     grid.appendChild(div);
                 });
 
                 document.getElementById('graph-img').src = 'data:image/png;base64,' + data.graph;
-                document.getElementById('result').style.display = 'block';
+                resultArea.style.display = 'block';
+                
+                // Smooth scroll to results
+                resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
             } catch (err) {
                 alert(err.message);
             } finally {
-                document.getElementById('loader').style.display = 'none';
+                loader.style.display = 'none';
+                btn.disabled = false;
             }
         }
     </script>
