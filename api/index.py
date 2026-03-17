@@ -378,7 +378,7 @@ async def index():
                     </div>
                     <span class="file-label">Original Audio</span>
                     <span class="file-name" id="name-clean">Target frequency response</span>
-                    <input type="file" id="clean_file" accept="audio/*">
+                    <input type="file" id="clean_file" accept="audio/*, .mp3, .wav, .m4a, .aac, .flac, .ogg">
                 </div>
 
                 <!-- Recorded File -->
@@ -388,7 +388,7 @@ async def index():
                     </div>
                     <span class="file-label">Recorded Audio</span>
                     <span class="file-name" id="name-recorded">Audio to be corrected</span>
-                    <input type="file" id="recorded_file" accept="audio/*">
+                    <input type="file" id="recorded_file" accept="audio/*, .mp3, .wav, .m4a, .aac, .flac, .ogg">
                 </div>
             </div>
 
